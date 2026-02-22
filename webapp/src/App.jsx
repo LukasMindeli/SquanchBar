@@ -81,7 +81,6 @@ export default function App() {
       <header className="topbar">
         <div className="brand">
           <div className="title">Squanch Bar</div>
-          <div className="subtitle">Neon • Glass • Menu</div>
         </div>
 
         <div className="actions">
@@ -119,11 +118,17 @@ export default function App() {
           return (
             <button
               key={t.id}
-              className={"tab " + (isActive ? "active" : "")}
+              className={
+              "tab " +
+              (isActive ? "active " : "") +
+              (t.id === "food" ? "tab-red " : "") +
+              (t.id === "dessert" ? "tab-green " : "") +
+              (t.id === "drinks" ? "tab-purple " : "")
+              }
               onClick={() => setActiveTab(t.id)}
               disabled={q.length > 0}
               title={q.length > 0 ? "Очисти поиск, чтобы переключать категории" : ""}
-            >
+              >
               {t.label}
             </button>
           );

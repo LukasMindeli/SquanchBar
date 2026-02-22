@@ -280,3 +280,19 @@
   height: 100%;
   object-fit: cover;
 }
+
+/* subtle neon ring for active tabs */
+.tab.active.tab-red {
+  border-color: rgba(255, 70, 70, 0.55);
+  box-shadow: 0 0 0 3px rgba(255, 70, 70, 0.10), 0 0 14px rgba(255, 70, 70, 0.18);
+}
+
+.tab.active.tab-green {
+  border-color: rgba(80, 255, 140, 0.55);
+  box-shadow: 0 0 0 3px rgba(80, 255, 140, 0.10), 0 0 14px rgba(80, 255, 140, 0.18);
+}
+
+.tab.active.tab-purple {
+  border-color: rgba(170, 110, 255, 0.55);
+  box-shadow: 0 0 0 3px rgba(170, 110, 255, 0.10), 0 0 14px rgba(170, 110, 255, 0.18);
+}
