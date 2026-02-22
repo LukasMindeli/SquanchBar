@@ -296,3 +296,60 @@
   border-color: rgba(170, 110, 255, 0.55);
   box-shadow: 0 0 0 3px rgba(170, 110, 255, 0.10), 0 0 14px rgba(170, 110, 255, 0.18);
 }
+
+/* --- FIX: neon rings for active tabs (more robust selectors) --- */
+.tab.tab-red.active {
+  border-color: rgba(255, 70, 70, 0.55);
+  box-shadow: 0 0 0 3px rgba(255, 70, 70, 0.10), 0 0 14px rgba(255, 70, 70, 0.18);
+}
+
+.tab.tab-green.active {
+  border-color: rgba(80, 255, 140, 0.55);
+  box-shadow: 0 0 0 3px rgba(80, 255, 140, 0.10), 0 0 14px rgba(80, 255, 140, 0.18);
+}
+
+.tab.tab-purple.active {
+  border-color: rgba(170, 110, 255, 0.55);
+  box-shadow: 0 0 0 3px rgba(170, 110, 255, 0.10), 0 0 14px rgba(170, 110, 255, 0.18);
+}
+
+/* --- FIX: mobile topbar layout --- */
+.actions {
+  min-width: 0;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.searchWrap {
+  min-width: 0;
+  flex: 1;
+}
+
+.search {
+  width: 100%;
+  padding-right: 44px; /* место под крестик */
+  box-sizing: border-box;
+}
+
+.clear {
+  right: 12px; /* если у тебя position absolute — будет аккуратнее */
+}
+
+/* On small screens: stack neatly */
+@media (max-width: 520px) {
+  .topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .actions {
+    width: 100%;
+  }
+
+  .hitBtn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+}
