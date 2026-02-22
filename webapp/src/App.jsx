@@ -52,7 +52,7 @@ export default function App() {
     resize();
     window.addEventListener("resize", resize);
 
-    const lifeMs = 420; // сколько живёт след
+    const lifeMs = 420;
     let raf = 0;
 
     function draw() {
@@ -61,7 +61,6 @@ export default function App() {
       const now = performance.now();
       const pts = pointsRef.current;
 
-      // удаляем старые точки
       while (pts.length && now - pts[0].t > lifeMs) pts.shift();
 
       ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
@@ -74,11 +73,11 @@ export default function App() {
         const a = pts[i - 1];
         const b = pts[i];
         const age = now - b.t;
-        const k = 1 - Math.min(1, age / lifeMs); // 1..0
+        const k = 1 - Math.min(1, age / lifeMs);
 
         const width = 10 * k + 1;
 
-        // внешнее неоновое свечение
+        // glow
         ctx.lineWidth = width;
         ctx.strokeStyle = `rgba(170, 110, 255, ${0.35 * k})`;
         ctx.beginPath();
@@ -86,7 +85,7 @@ export default function App() {
         ctx.lineTo(b.x, b.y);
         ctx.stroke();
 
-        // внутреннее "ядро"
+        // core
         ctx.lineWidth = Math.max(1, width * 0.35);
         ctx.strokeStyle = `rgba(255, 255, 255, ${0.25 * k})`;
         ctx.beginPath();
@@ -108,16 +107,15 @@ export default function App() {
     }
 
     function onPointerMove(e) {
-  // На телефоне (touch) рисуем всегда при движении пальца
-  if (e.pointerType === "touch") {
-    addPoint(e.clientX, e.clientY);
-    return;
-  }
-
-  // На мыши — только когда зажата кнопка
-  if (e.buttons === 0) return;
-  addPoint(e.clientX, e.clientY);
-}
+      // touch: always draw while moving finger
+      if (e.pointerType === "touch") {
+        addPoint(e.clientX, e.clientY);
+        return;
+      }
+      // mouse: draw only while button is held
+      if (e.buttons === 0) return;
+      addPoint(e.clientX, e.clientY);
+    }
 
     window.addEventListener("pointerdown", onPointerDown, { passive: true });
     window.addEventListener("pointermove", onPointerMove, { passive: true });
@@ -133,6 +131,7 @@ export default function App() {
   // --- Menu state ---
   const [activeTab, setActiveTab] = useState("food");
   const [query, setQuery] = useState("");
+  const [selectedItem, setSelectedItem] = useState(null);
 
   const q = normalize(query);
 
@@ -199,7 +198,7 @@ export default function App() {
 
   return (
     <div className="page">
-      {/* Laser overlay on top of everything */}
+      {/* Laser overlay (above everything) */}
       <canvas ref={canvasRef} className="laserCanvas" />
 
       {showSplash && (
@@ -284,6 +283,7 @@ export default function App() {
             <article
               key={item.id}
               className="card"
+              onClick={() => setSelectedItem(item)}
               onPointerDown={(e) => {
                 const variant =
                   item.category === "dessert"
@@ -303,6 +303,7 @@ export default function App() {
                 />
                 <div className="price">
                   {item.price} <span className="uah">грн</span>
+                  {item.size && <span className="size"> • {item.size}</span>}
                 </div>
               </div>
 
@@ -330,6 +331,49 @@ export default function App() {
           </div>
         )}
       </main>
+
+      {/* Modal: full screen dish details */}
+      {selectedItem && (
+        <div
+          className="modalOverlay"
+          onClick={() => setSelectedItem(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modalClose" onClick={() => setSelectedItem(null)}>
+              ✕
+            </button>
+
+            <div className="modalImgWrap">
+              <img
+                className="modalImg"
+                src={imgHref(selectedItem.image)}
+                alt={selectedItem.title}
+              />
+              <div className="modalPrice">
+                {selectedItem.price} <span className="uah">грн</span>
+                {selectedItem.size && <span className="size"> • {selectedItem.size}</span>}
+              </div>
+            </div>
+
+            <div className="modalBody">
+              <h2 className="modalTitle">{selectedItem.title}</h2>
+              {selectedItem.desc && <p className="modalDesc">{selectedItem.desc}</p>}
+
+              {Array.isArray(selectedItem.tags) && selectedItem.tags.length > 0 && (
+                <div className="tags">
+                  {selectedItem.tags.map((t) => (
+                    <span key={t} className="tag">
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
