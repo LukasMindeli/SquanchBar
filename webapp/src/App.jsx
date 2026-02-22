@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
 import { MENU, TABS } from "./menuData.js";
 import introVideo from "./assets/intro.mp4";
@@ -20,13 +20,108 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [fadeOut, setFadeOut] = useState(false);
 
+  // --- Laser trail refs ---
+  const canvasRef = useRef(null);
+  const pointsRef = useRef([]); // {x,y,t}
+
   useEffect(() => {
-    // 3 секунды показываем видео, затем fade
     const t1 = setTimeout(() => setFadeOut(true), 3000);
-    const t2 = setTimeout(() => setShowSplash(false), 3400); // fade ~0.4s
+    const t2 = setTimeout(() => setShowSplash(false), 3400);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
+    };
+  }, []);
+
+  // --- Laser trail effect (canvas overlay) ---
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d", { alpha: true });
+
+    function resize() {
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      canvas.width = Math.floor(window.innerWidth * dpr);
+      canvas.height = Math.floor(window.innerHeight * dpr);
+      canvas.style.width = window.innerWidth + "px";
+      canvas.style.height = window.innerHeight + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    resize();
+    window.addEventListener("resize", resize);
+
+    const lifeMs = 420; // сколько живёт след
+    let raf = 0;
+
+    function draw() {
+      raf = requestAnimationFrame(draw);
+
+      const now = performance.now();
+      const pts = pointsRef.current;
+
+      // удаляем старые точки
+      while (pts.length && now - pts[0].t > lifeMs) pts.shift();
+
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      if (pts.length < 2) return;
+
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+
+      for (let i = 1; i < pts.length; i++) {
+        const a = pts[i - 1];
+        const b = pts[i];
+        const age = now - b.t;
+        const k = 1 - Math.min(1, age / lifeMs); // 1..0
+
+        const width = 10 * k + 1;
+
+        // внешнее неоновое свечение
+        ctx.lineWidth = width;
+        ctx.strokeStyle = `rgba(170, 110, 255, ${0.35 * k})`;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+
+        // внутреннее "ядро"
+        ctx.lineWidth = Math.max(1, width * 0.35);
+        ctx.strokeStyle = `rgba(255, 255, 255, ${0.25 * k})`;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+      }
+    }
+
+    raf = requestAnimationFrame(draw);
+
+    function addPoint(x, y) {
+      pointsRef.current.push({ x, y, t: performance.now() });
+      if (pointsRef.current.length > 80) pointsRef.current.shift();
+    }
+
+    function onPointerDown(e) {
+      addPoint(e.clientX, e.clientY);
+    }
+
+    function onPointerMove(e) {
+      // рисуем только когда "свайп/зажато"
+      // на touch pressure обычно > 0
+      if (e.pressure === 0 && e.buttons === 0) return;
+      addPoint(e.clientX, e.clientY);
+    }
+
+    window.addEventListener("pointerdown", onPointerDown, { passive: true });
+    window.addEventListener("pointermove", onPointerMove, { passive: true });
+
+    return () => {
+      window.removeEventListener("resize", resize);
+      window.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("pointermove", onPointerMove);
+      cancelAnimationFrame(raf);
     };
   }, []);
 
@@ -99,6 +194,9 @@ export default function App() {
 
   return (
     <div className="page">
+      {/* Laser overlay on top of everything */}
+      <canvas ref={canvasRef} className="laserCanvas" />
+
       {showSplash && (
         <div className={"splash " + (fadeOut ? "fade" : "")}>
           <video
@@ -223,8 +321,7 @@ export default function App() {
 
         {filtered.length === 0 && (
           <div className="empty">
-            Ничего не найдено. Попробуй другое слово (например: “хит”, “остро”,
-            “бургер”).
+            Ничего не найдено. Попробуй другое слово (например: “хит”, “остро”, “бургер”).
           </div>
         )}
       </main>

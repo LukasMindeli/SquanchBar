@@ -380,3 +380,20 @@
     opacity: 0;
   }
 }
+
+/* --- laser trail overlay --- */
+.laserCanvas {
+  position: fixed;
+  inset: 0;
+  z-index: 60; /* ниже splash (9999), выше UI */
+  pointer-events: none; /* чтобы не мешал кликам */
+  opacity: 0.9;
+}
+
+.laserCanvas {
+  position: fixed;
+  inset: 0;
+  z-index: 10000; /* поверх всего, даже splash */
+  pointer-events: none;
+  opacity: 0.9;
+}
