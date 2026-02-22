@@ -30,11 +30,47 @@ export default function App() {
     };
   }, []);
 
-  // --- Menu state (твоя текущая логика) ---
+  // --- Menu state ---
   const [activeTab, setActiveTab] = useState("food");
   const [query, setQuery] = useState("");
 
   const q = normalize(query);
+
+  // --- Ripple (neon wave) ---
+  function spawnRipple(e, variant = "red") {
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+
+    const clientX = e.touches?.[0]?.clientX ?? e.clientX;
+    const clientY = e.touches?.[0]?.clientY ?? e.clientY;
+
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+
+    const size = Math.max(rect.width, rect.height) * 1.4;
+
+    const ripple = document.createElement("span");
+    ripple.className = "ripple";
+    ripple.style.left = `${x}px`;
+    ripple.style.top = `${y}px`;
+    ripple.style.width = `${size}px`;
+    ripple.style.height = `${size}px`;
+
+    const color =
+      variant === "green"
+        ? "rgba(80, 255, 140, 0.55)"
+        : variant === "purple"
+        ? "rgba(170, 110, 255, 0.55)"
+        : "rgba(255, 70, 70, 0.55)";
+
+    ripple.style.background = `radial-gradient(circle, ${color} 0%, rgba(0,0,0,0) 65%)`;
+
+    card.appendChild(ripple);
+
+    ripple.addEventListener("animationend", () => {
+      ripple.remove();
+    });
+  }
 
   const filtered = useMemo(() => {
     if (q.length > 0) {
@@ -95,7 +131,9 @@ export default function App() {
           </div>
 
           <button
-            className={"hitBtn " + (activeTab === "hits" && q.length === 0 ? "active" : "")}
+            className={
+              "hitBtn " + (activeTab === "hits" && q.length === 0 ? "active" : "")
+            }
             onClick={() => {
               if (q.length > 0) setQuery("");
               setActiveTab((prev) => (prev === "hits" ? "food" : "hits"));
@@ -114,16 +152,16 @@ export default function App() {
             <button
               key={t.id}
               className={
-              "tab " +
-              (isActive ? "active " : "") +
-              (t.id === "food" ? "tab-red " : "") +
-              (t.id === "dessert" ? "tab-green " : "") +
-              (t.id === "drinks" ? "tab-purple " : "")
+                "tab " +
+                (isActive ? "active " : "") +
+                (t.id === "food" ? "tab-red " : "") +
+                (t.id === "dessert" ? "tab-green " : "") +
+                (t.id === "drinks" ? "tab-purple " : "")
               }
               onClick={() => setActiveTab(t.id)}
               disabled={q.length > 0}
               title={q.length > 0 ? "Очисти поиск, чтобы переключать категории" : ""}
-              >
+            >
               {t.label}
             </button>
           );
@@ -133,14 +171,33 @@ export default function App() {
       <main className="content">
         <div className="metaRow">
           <div className="count">{countLabel}</div>
-          {q.length > 0 && <div className="hint">Поиск активен: категории игнорируются</div>}
+          {q.length > 0 && (
+            <div className="hint">Поиск активен: категории игнорируются</div>
+          )}
         </div>
 
         <section className="grid">
           {filtered.map((item) => (
-            <article key={item.id} className="card">
+            <article
+              key={item.id}
+              className="card"
+              onPointerDown={(e) => {
+                const variant =
+                  item.category === "dessert"
+                    ? "green"
+                    : item.category === "drinks"
+                    ? "purple"
+                    : "red";
+                spawnRipple(e, variant);
+              }}
+            >
               <div className="imgWrap">
-                <img className="img" src={imgHref(item.image)} alt={item.title} loading="lazy" />
+                <img
+                  className="img"
+                  src={imgHref(item.image)}
+                  alt={item.title}
+                  loading="lazy"
+                />
                 <div className="price">
                   {item.price} <span className="uah">грн</span>
                 </div>
@@ -166,7 +223,8 @@ export default function App() {
 
         {filtered.length === 0 && (
           <div className="empty">
-            Ничего не найдено. Попробуй другое слово (например: “хит”, “остро”, “бургер”).
+            Ничего не найдено. Попробуй другое слово (например: “хит”, “остро”,
+            “бургер”).
           </div>
         )}
       </main>
