@@ -92,11 +92,6 @@ export default function App() {
               placeholder="Поиск по всему меню…"
               inputMode="search"
             />
-            {query && (
-              <button className="clear" onClick={() => setQuery("")} title="Очистить">
-                ✕
-              </button>
-            )}
           </div>
 
           <button
