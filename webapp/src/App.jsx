@@ -108,11 +108,16 @@ export default function App() {
     }
 
     function onPointerMove(e) {
-      // рисуем только когда "свайп/зажато"
-      // на touch pressure обычно > 0
-      if (e.pressure === 0 && e.buttons === 0) return;
-      addPoint(e.clientX, e.clientY);
-    }
+  // На телефоне (touch) рисуем всегда при движении пальца
+  if (e.pointerType === "touch") {
+    addPoint(e.clientX, e.clientY);
+    return;
+  }
+
+  // На мыши — только когда зажата кнопка
+  if (e.buttons === 0) return;
+  addPoint(e.clientX, e.clientY);
+}
 
     window.addEventListener("pointerdown", onPointerDown, { passive: true });
     window.addEventListener("pointermove", onPointerMove, { passive: true });
