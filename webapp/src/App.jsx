@@ -107,12 +107,10 @@ export default function App() {
     }
 
     function onPointerMove(e) {
-      // touch: always draw while moving finger
       if (e.pointerType === "touch") {
         addPoint(e.clientX, e.clientY);
         return;
       }
-      // mouse: draw only while button is held
       if (e.buttons === 0) return;
       addPoint(e.clientX, e.clientY);
     }
@@ -132,6 +130,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("food");
   const [query, setQuery] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
+  const [showContacts, setShowContacts] = useState(false);
 
   const q = normalize(query);
 
@@ -198,7 +197,6 @@ export default function App() {
 
   return (
     <div className="page">
-      {/* Laser overlay (above everything) */}
       <canvas ref={canvasRef} className="laserCanvas" />
 
       {showSplash && (
@@ -332,7 +330,14 @@ export default function App() {
         )}
       </main>
 
-      {/* Modal: full screen dish details */}
+      {/* Bottom bar */}
+      <footer className="bottomBar">
+        <button className="bottomBtn" onClick={() => setShowContacts(true)}>
+          Контакты
+        </button>
+      </footer>
+
+      {/* Modal: dish details */}
       {selectedItem && (
         <div
           className="modalOverlay"
@@ -353,7 +358,9 @@ export default function App() {
               />
               <div className="modalPrice">
                 {selectedItem.price} <span className="uah">грн</span>
-                {selectedItem.size && <span className="size"> • {selectedItem.size}</span>}
+                {selectedItem.size && (
+                  <span className="size"> • {selectedItem.size}</span>
+                )}
               </div>
             </div>
 
@@ -370,6 +377,48 @@ export default function App() {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: contacts */}
+      {showContacts && (
+        <div
+          className="modalOverlay"
+          onClick={() => setShowContacts(false)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modalClose" onClick={() => setShowContacts(false)}>
+              ✕
+            </button>
+
+            <div className="modalBody">
+              <h2 className="modalTitle">Squanch Bar — контакты</h2>
+
+              <p className="modalDesc">
+                Адрес: <b>добавим позже</b>
+                <br />
+                График: <b>добавим позже</b>
+              </p>
+
+              <div className="tags" style={{ marginTop: 12 }}>
+                <a className="tag linkTag" href="https://t.me/" target="_blank" rel="noreferrer">
+                  Telegram
+                </a>
+                <a className="tag linkTag" href="https://instagram.com/" target="_blank" rel="noreferrer">
+                  Instagram
+                </a>
+                <a className="tag linkTag" href="https://maps.google.com" target="_blank" rel="noreferrer">
+                  Открыть на карте
+                </a>
+              </div>
+
+              <div className="empty" style={{ marginTop: 14 }}>
+                Потом добавим номер телефона, доставку и “как нас найти”.
+              </div>
             </div>
           </div>
         </div>

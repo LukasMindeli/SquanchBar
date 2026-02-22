@@ -499,3 +499,42 @@
   margin-left: 6px;
   font-size: 12px;
 }
+
+.linkTag {
+  text-decoration: none;
+  cursor: pointer;
+}
+.linkTag:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.09);
+}
+
+/* --- bottom bar --- */
+.bottomBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+  background: rgba(10, 14, 28, 0.72);
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(10px);
+}
+
+.bottomBtn {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(170, 110, 255, 0.30);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 0 0 3px rgba(170, 110, 255, 0.08);
+}
+
+/* чтобы контент не прятался под bottom bar */
+.content {
+  padding-bottom: 96px;
+}
