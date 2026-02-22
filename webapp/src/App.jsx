@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./App.css";
 import { MENU, TABS } from "./menuData.js";
+import introVideo from "./assets/intro.mp4";
 
 function imgHref(file) {
   return new URL(`./assets/menu/${file}`, import.meta.url).href;
@@ -15,13 +16,27 @@ function normalize(str) {
 }
 
 export default function App() {
+  // --- Splash state ---
+  const [showSplash, setShowSplash] = useState(true);
+  const [fadeOut, setFadeOut] = useState(false);
+
+  useEffect(() => {
+    // 3 секунды показываем видео, затем fade
+    const t1 = setTimeout(() => setFadeOut(true), 3000);
+    const t2 = setTimeout(() => setShowSplash(false), 3400); // fade ~0.4s
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, []);
+
+  // --- Menu state (твоя текущая логика) ---
   const [activeTab, setActiveTab] = useState("food");
   const [query, setQuery] = useState("");
 
   const q = normalize(query);
 
   const filtered = useMemo(() => {
-    // Поиск НЕ пустой -> игнорируем таб и ищем по всем категориям
     if (q.length > 0) {
       return MENU.filter((item) => {
         const hay = normalize(
@@ -30,33 +45,37 @@ export default function App() {
         return hay.includes(q);
       });
     }
-
-    // Поиск пустой -> фильтр по табу
     if (activeTab === "all") return MENU;
+    if (activeTab === "hits") {
+      return MENU.filter((i) =>
+        (i.tags || []).some((t) => normalize(t) === "хит")
+      );
+    }
     return MENU.filter((item) => item.category === activeTab);
   }, [q, activeTab]);
 
-  const hits = useMemo(() => {
-    return MENU.filter((i) => (i.tags || []).some((t) => normalize(t) === "хит"));
-  }, []);
-
-  const shownItems = useMemo(() => {
-    // Кнопка "Хиты" будет работать как быстрый фильтр по хиту,
-    // но только когда поиск пустой (логично).
-    // Реализуем через activeTab === "hits" (внутренний режим).
-    if (q.length === 0 && activeTab === "hits") return hits;
-    return filtered;
-  }, [q, activeTab, hits, filtered]);
-
   const countLabel = useMemo(() => {
-    if (q.length > 0) return `Найдено: ${shownItems.length}`;
-    if (activeTab === "hits") return `Хиты: ${shownItems.length}`;
+    if (q.length > 0) return `Найдено: ${filtered.length}`;
+    if (activeTab === "hits") return `Хиты: ${filtered.length}`;
     const tab = TABS.find((t) => t.id === activeTab);
-    return `${tab?.label ?? "Меню"}: ${shownItems.length}`;
-  }, [q, shownItems.length, activeTab]);
+    return `${tab?.label ?? "Меню"}: ${filtered.length}`;
+  }, [q, filtered.length, activeTab]);
 
   return (
     <div className="page">
+      {showSplash && (
+        <div className={"splash " + (fadeOut ? "fade" : "")}>
+          <video
+            className="splashVideo"
+            src={introVideo}
+            autoPlay
+            muted
+            playsInline
+            preload="auto"
+          />
+        </div>
+      )}
+
       <div className="glow" />
 
       <header className="topbar">
@@ -84,7 +103,6 @@ export default function App() {
           <button
             className={"hitBtn " + (activeTab === "hits" && q.length === 0 ? "active" : "")}
             onClick={() => {
-              // если идет поиск — сначала чистим поиск, иначе переключаем hits
               if (q.length > 0) setQuery("");
               setActiveTab((prev) => (prev === "hits" ? "food" : "hits"));
             }}
@@ -103,7 +121,7 @@ export default function App() {
               key={t.id}
               className={"tab " + (isActive ? "active" : "")}
               onClick={() => setActiveTab(t.id)}
-              disabled={q.length > 0} // когда поиск активен — табы “игнорируются”
+              disabled={q.length > 0}
               title={q.length > 0 ? "Очисти поиск, чтобы переключать категории" : ""}
             >
               {t.label}
@@ -119,7 +137,7 @@ export default function App() {
         </div>
 
         <section className="grid">
-          {shownItems.map((item) => (
+          {filtered.map((item) => (
             <article key={item.id} className="card">
               <div className="imgWrap">
                 <img className="img" src={imgHref(item.image)} alt={item.title} loading="lazy" />
@@ -129,10 +147,7 @@ export default function App() {
               </div>
 
               <div className="body">
-                <div className="row1">
-                  <h3 className="name">{item.title}</h3>
-                </div>
-
+                <h3 className="name">{item.title}</h3>
                 {item.desc && <p className="desc">{item.desc}</p>}
 
                 {Array.isArray(item.tags) && item.tags.length > 0 && (
@@ -149,7 +164,7 @@ export default function App() {
           ))}
         </section>
 
-        {shownItems.length === 0 && (
+        {filtered.length === 0 && (
           <div className="empty">
             Ничего не найдено. Попробуй другое слово (например: “хит”, “остро”, “бургер”).
           </div>
